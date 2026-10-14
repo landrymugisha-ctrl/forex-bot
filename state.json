@@ -1,0 +1,20 @@
+{
+ "EURUSD|SELL|H4": {
+  "missing_sig": "engulf,rr"
+ },
+ "AUDUSD|BUY|H4": {
+  "missing_sig": "timeframes,ema,rr"
+ },
+ "GBPJPY|BUY|H4": {
+  "missing_sig": "timeframes,rr"
+ },
+ "EURGBP|SELL|H4": {
+  "missing_sig": "timeframes,engulf,rr"
+ },
+ "AUDCHF|BUY|H4": {
+  "missing_sig": "timeframes,engulf,rr"
+ },
+ "AUDNZD|BUY|H4": {
+  "missing_sig": "engulf,rr"
+ }
+}
