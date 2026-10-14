@@ -1,7 +1,5 @@
 {
- "EURUSD|SELL|H4": {
-  "missing_sig": "retest,engulf,rr"
- },
+ "EURUSD|SELL|H4": {},
  "AUDUSD|BUY|H4": {},
  "GBPJPY|BUY|H4": {},
  "EURGBP|SELL|H4": {},
@@ -30,10 +28,9 @@
   "full": "2026-10-14 08:00:00",
   "missing_sig": "engulf,rr"
  },
- "EURJPY|SELL|H4": {
+ "EURJPY|SELL|H4": {},
+ "GBPCAD|SELL|H4": {},
+ "EURCHF|SELL|H4": {
   "missing_sig": "timeframes,structure,rr"
- },
- "GBPCAD|SELL|H4": {
-  "missing_sig": "timeframes,ema,rr"
  }
 }
