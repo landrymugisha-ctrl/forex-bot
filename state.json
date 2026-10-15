@@ -38,7 +38,8 @@
  "NZDCAD|SELL|1H": {
   "full": "2026-10-15 13:00:00"
  },
- "USDCHF|SELL|H4": {
+ "USDCHF|SELL|H4": {},
+ "GBPCHF|SELL|H4": {
   "missing_sig": "timeframes,structure,rr"
  }
 }
