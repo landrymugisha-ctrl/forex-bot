@@ -23,15 +23,12 @@
  "CADJPY|BUY|H4": {},
  "GBPCHF|BUY|H4": {},
  "NZDCAD|SELL|H4": {
-  "full": "2026-10-14 08:00:00",
-  "missing_sig": "retest,engulf,rr"
+  "full": "2026-10-14 08:00:00"
  },
  "EURJPY|SELL|H4": {},
  "GBPCAD|SELL|H4": {},
  "EURCHF|SELL|H4": {},
- "AUDJPY|BUY|H4": {
-  "missing_sig": "timeframes,ema,engulf"
- },
+ "AUDJPY|BUY|H4": {},
  "CADJPY|SELL|30M": {
   "full": "2026-10-15 00:30:00"
  }
