@@ -40,13 +40,13 @@ CFG = dict(
            "GBPAUD", "GBPCAD", "GBPCHF", "GBPNZD", "AUDCAD", "AUDCHF", "AUDNZD",
            "NZDCAD", "NZDCHF"],
     swing_n={"W1": 2, "D1": 3, "H4": 3},  # candles each side that define a swing high/low
-    weekly_veto=True,        # top-down: skip trades that go against the weekly structure
+    weekly_veto=False,       # top-down: skip trades that go against the weekly structure
     entry_timeframes=["H4", "2H", "1H", "30M"],  # charts where the entry is looked for (no 15M)
     watch_timeframes=["H4"], # WATCH messages only for these charts (lower charts would be noisy)
     watch_max_missing=3,     # send a WATCH when 1 up to this many of the 8 points are missing
     aoi_timeframes=["W1", "D1", "H4"],   # charts where areas of interest are searched.
                                          # Remove "H4" to only trade areas from the daily/weekly charts.
-    zone_lookback={"W1": 104, "D1": 120, "H4": 120},  # candles to look back on each chart
+    zone_lookback={"W1": 104, "D1": 200, "H4": 120},  # candles to look back on each chart
     break_search_days=90,    # how far back to look for the break of an area
     ema_period=50,
     ema_lookback=5,          # last N closes (entry chart) must be on the right side of EMA 50
@@ -61,7 +61,9 @@ CFG = dict(
     retest_window=6,         # the retest must happen within the last N candles of the entry chart
     sl_buffer_atr=0.15,      # small buffer beyond the structure for the stop loss
     min_rr=2.0,              # Step 8
-    pref_rr=3.0,
+    pref_rr=2.5,             # usual take profit: 1:2 or 1:2.5
+    show_ahead=3,            # chart: at most this many areas in the way of the market
+    show_behind=2,           # chart: and this many behind price
     scan_every_minutes=15,
 )
 
@@ -72,6 +74,7 @@ STATE_FILE = Path("state.json")
 CHART_DIR = Path("charts")
 
 TF_RANK = {"W1": 3, "D1": 2, "H4": 1}
+AOI_NAME = {"W1": "W AOI", "D1": "D AOI", "H4": "4H AOI"}
 TF_BAR = {"W1": pd.Timedelta(days=7), "D1": pd.Timedelta(days=1), "H4": pd.Timedelta(hours=4),
           "2H": pd.Timedelta(hours=2), "1H": pd.Timedelta(hours=1), "30M": pd.Timedelta(minutes=30)}
 
@@ -155,9 +158,10 @@ def build_weekly(d1):
 # --------------------------------------------------------------------------
 # AREAS OF INTEREST
 # --------------------------------------------------------------------------
-def find_zones(df, tf, cfg, pip=0.0001):
+def find_zones(df, tf, cfg, pip=0.0001, enforce_range=True):
     """Areas of interest on one chart. Wicks are ignored (candle bodies only).
-    3+ touches, size 5-60 pips, lying between the last HL and the last HH (mirrored for sells)."""
+    3+ touches, size 5-60 pips. 'in_range' says if the area lies between the last HL and the
+    last HH (mirrored for sells). enforce_range=True keeps only those areas."""
     win = df.iloc[-cfg["zone_lookback"][tf]:]
     if len(win) < 30:
         return []
@@ -168,8 +172,7 @@ def find_zones(df, tf, cfg, pip=0.0001):
     if not hi or not lo:
         return []
     rng_low, rng_high = lo[-1][1], hi[-1][1]      # last HL and last HH (body levels)
-    if rng_low >= rng_high:
-        return []
+    range_ok = rng_low < rng_high
     min_sz, max_sz = cfg["zone_min_pips"] * pip, cfg["zone_max_pips"] * pip
     pts = sorted(hi + lo if cfg["count_both_pivots"] else hi, key=lambda p: p[1])
     tolz = min(cfg["zone_tol_atr"] * a, max_sz)
@@ -187,7 +190,8 @@ def find_zones(df, tf, cfg, pip=0.0001):
         if len(g) < cfg["min_touches"]:
             continue
         bot, top = min(p[1] for p in g), max(p[1] for p in g)
-        if bot < rng_low - eps or top > rng_high + eps:      # whole area must sit between HL and HH
+        in_range = bool(range_ok and bot >= rng_low - eps and top <= rng_high + eps)
+        if enforce_range and not in_range:
             continue
         if top - bot < min_sz:                               # too thin: widen to the minimum size
             mid = (top + bot) / 2
@@ -195,8 +199,25 @@ def find_zones(df, tf, cfg, pip=0.0001):
         if top - bot > max_sz + eps:
             continue
         last_time = win.index[max(p[0] for p in g)] + TF_BAR[tf]   # when the last touch closed
-        zones.append(dict(bot=bot, top=top, touches=len(g), tf=tf, last_time=last_time))
+        first_time = win.index[min(p[0] for p in g)]               # first touch (where the band starts)
+        zones.append(dict(bot=bot, top=top, touches=len(g), tf=tf, last_time=last_time,
+                          first_time=first_time, in_range=in_range))
     return zones
+
+
+def dedupe_zones(zs):
+    """Higher chart first (W > D > 4H). A lower-chart area that overlaps one already kept is dropped."""
+    kept = []
+    for z in sorted(zs, key=lambda z: (-TF_RANK[z["tf"]], z["bot"])):
+        if all(z["top"] < k["bot"] or z["bot"] > k["top"] for k in kept):
+            kept.append(z)
+    return kept
+
+
+def flip_zone(z):
+    z = dict(z)
+    z["bot"], z["top"] = -z["top"], -z["bot"]
+    return z
 
 
 def pip_size(pair):
@@ -225,20 +246,30 @@ def evaluate_buy(entry, entry_tf, h4, d1, w1, cfg, only_complete=False, pip=0.00
     el = cfg["ema_lookback"]
     out["ema"] = bool(ema[L] < c[L] and (c[L - el + 1:L + 1] > ema[L - el + 1:L + 1]).all())
 
-    # Step 6: bullish engulfing candle that has closed
+    # Step 6: bullish engulfing candle that has closed. Bodies only (wicks ignored).
+    # Its body must cover the bodies of the last 1, 2 or 3 candles on its left.
     tol = 0.05 * a
-    out["engulf"] = bool(c[L - 1] < o[L - 1] and c[L] > o[L]
-                         and c[L] >= o[L - 1] and o[L] <= c[L - 1] + tol)
+    out["engulf"] = False
+    if c[L] > o[L]:
+        for k in (1, 2, 3):
+            lo_b = np.minimum(o[L - k:L], c[L - k:L]).min()
+            hi_b = np.maximum(o[L - k:L], c[L - k:L]).max()
+            if (c[L - k:L] < o[L - k:L]).any() and c[L] >= hi_b and o[L] <= lo_b + tol:
+                out["engulf"] = True
+                break
 
     if only_complete and not out["engulf"]:
         return out, det          # backtest shortcut: a signal needs an engulfing candle
 
-    # Step 3: areas of interest. Search order W1 -> D1 -> H4 (a lower chart is used only when the
-    # higher one has no usable area, or its areas have no break and retest).
+    # Step 3: areas of interest. Search order W1 -> D1 -> H4; none is skipped. A lower-chart area
+    # that overlaps a higher-chart one is dropped. The trade area must lie between the last HL and HH.
     frames = {"W1": w1, "D1": d1, "H4": h4}
-    zones = []
+    allz = []
     for tf in cfg["aoi_timeframes"]:
-        zones += find_zones(frames[tf], tf, cfg, pip)
+        allz += find_zones(frames[tf], tf, cfg, pip, enforce_range=False)
+    allz = dedupe_zones(allz)
+    det["zones_all"] = allz
+    zones = [z for z in allz if z["in_range"]]
     if not zones:
         return out, det
     out["zone"] = True
@@ -279,11 +310,20 @@ def evaluate_buy(entry, entry_tf, h4, d1, w1, cfg, only_complete=False, pip=0.00
     out["sl"] = bool(risk > 0)
     det.update(zone=best, entry=price, sl=sl, atr=a, time=arr.index[L])
 
-    # Step 8: take profit from structure (H4 and D1 swing highs), min 1:2, prefer 1:3
+    # Chart areas: the trade area + up to 3 in the way of the market + 1-2 behind price
+    ahead = sorted([z for z in allz if (z["bot"] + z["top"]) / 2 > price and z is not best],
+                   key=lambda z: z["bot"])
+    behind = sorted([z for z in allz if (z["bot"] + z["top"]) / 2 <= price and z is not best],
+                    key=lambda z: -z["top"])
+    det["show"] = ahead[:cfg["show_ahead"]] + [best] + behind[:cfg["show_behind"]]
+
+    # Step 8: take profit, 1:2 or 1:2.5. Targets are swing highs and the bottoms of areas ahead.
     if risk > 0:
+        obstacles = sorted([z for z in allz if z["bot"] > price], key=lambda z: z["bot"])
         h4_hi, _ = pivots(h4.iloc[-cfg["zone_lookback"]["H4"]:], cfg["swing_n"]["H4"])
         d_hi, _ = pivots(d1.tail(250), cfg["swing_n"]["D1"])
         cands = [p for _, p in h4_hi if p > price] + [p for _, p in d_hi if p > price]
+        cands += [z["bot"] for z in obstacles]
         if cands:
             target = min(cands)
             avail = (target - price) / risk
@@ -294,8 +334,11 @@ def evaluate_buy(entry, entry_tf, h4, d1, w1, cfg, only_complete=False, pip=0.00
             elif avail >= cfg["min_rr"]:
                 det.update(tp=price + cfg["min_rr"] * risk, rr=cfg["min_rr"])
                 out["rr"] = True
-        if "tp" not in det:          # no good structural target: fixed 1:2 and the 8th point stays missing
+        if "tp" not in det:          # not enough room: fixed 1:2, the signal still goes out with a warning
             det.update(tp=price + cfg["min_rr"] * risk, rr=cfg["min_rr"], tp_fixed=True)
+        if obstacles and obstacles[0]["bot"] < price + cfg["min_rr"] * risk:
+            o1 = obstacles[0]
+            det["in_way"] = dict(tf=o1["tf"], level=o1["bot"], avail=(o1["bot"] - price) / risk)
     return out, det
 
 
@@ -325,9 +368,12 @@ def analyze(entry, entry_tf, h4, d1, w1, cfg=CFG, only_complete=False, pip=0.000
                 if k in det:
                     det[k] = -det[k]
             if "zone" in det:
-                z = dict(det["zone"])
-                z["bot"], z["top"] = -z["top"], -z["bot"]
-                det["zone"] = z
+                det["zone"] = flip_zone(det["zone"])
+            for k in ("show", "zones_all"):
+                if k in det:
+                    det[k] = [flip_zone(z) for z in det[k]]
+            if "in_way" in det:
+                det["in_way"] = dict(det["in_way"], level=-det["in_way"]["level"])
         full = {"timeframes": agree, "structure": st["H4"] == tag, **checks}
         missing = [k for k, v in full.items() if not v]
         main_ok = all(full[k] for k in cfg["main_points"])
@@ -434,25 +480,45 @@ def make_chart(pair, df_entry, r, path):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     d = r["det"]
-    df = df_entry.iloc[-90:]
-    ema = df_entry["close"].ewm(span=CFG["ema_period"], adjust=False).mean().iloc[-90:]
+    N = 90
+    df = df_entry.iloc[-N:]
+    ema = df_entry["close"].ewm(span=CFG["ema_period"], adjust=False).mean().iloc[-N:]
     fig, ax = plt.subplots(figsize=(10, 5.5))
     for i, (_, row) in enumerate(df.iterrows()):
         col = "#26a69a" if row["close"] >= row["open"] else "#ef5350"
         ax.vlines(i, row["low"], row["high"], color=col, lw=1)
         ax.add_patch(plt.Rectangle((i - 0.3, min(row["open"], row["close"])), 0.6,
-                                   abs(row["close"] - row["open"]) or 1e-9, color=col))
-    ax.plot(range(len(df)), ema.values, color="#ffb300", lw=1.3, label="EMA 50")
-    z = d.get("zone")
-    if z:
-        ax.axhspan(z["bot"], z["top"], color="#5c6bc0", alpha=0.25,
-                   label=f"Area of interest ({z['tf']})")
+                                   abs(row["close"] - row["open"]) or 1e-9, color=col, zorder=3))
+    ax.plot(range(len(df)), ema.values, color="#ffb300", lw=1.3, label="EMA 50", zorder=4)
+    right = len(df) + 4
+    trade = d.get("zone")
+    zs = list(d.get("show", []))
+    if trade and not any(abs(z["bot"] - trade["bot"]) < 1e-12 and abs(z["top"] - trade["top"]) < 1e-12 for z in zs):
+        zs.append(trade)
+    lo, hi = df["low"].min(), df["high"].max()
+    if r["complete"]:
+        lo, hi = min(lo, d["sl"], d["entry"]), max(hi, d["entry"])
+    for z in zs:
+        ft = z.get("first_time")
+        x0 = 0 if ft is None else max(0, int(df.index.searchsorted(pd.Timestamp(ft))))
+        is_trade = bool(trade) and abs(z["bot"] - trade["bot"]) < 1e-12 and abs(z["top"] - trade["top"]) < 1e-12
+        ax.add_patch(plt.Rectangle((x0, z["bot"]), right - x0, z["top"] - z["bot"],
+                                   facecolor="#9e9e9e", alpha=0.35 if is_trade else 0.22,
+                                   edgecolor="#ffffff" if is_trade else "none", lw=1.2, zorder=1))
+        ax.text(right, z["top"], AOI_NAME.get(z["tf"], "AOI"), color="white", fontsize=8,
+                ha="right", va="bottom", zorder=5)
     if r["complete"]:
         ax.axhline(d["entry"], color="white", ls="--", lw=1, label="Entry")
         ax.axhline(d["sl"], color="#ef5350", ls="--", lw=1.2, label="Stop loss")
-        ax.axhline(d["tp"], color="#26a69a", ls="--", lw=1.2, label="Take profit")
-    ax.set_xlim(-1, len(df) + 1)
-    ax.autoscale(axis="y")
+        if d["tp"] <= hi + (hi - lo) * 0.5:
+            ax.axhline(d["tp"], color="#26a69a", ls="--", lw=1.2, label="Take profit")
+            hi = max(hi, d["tp"])
+    near = [z for z in zs if z["top"] >= lo - (hi - lo) * 0.3 and z["bot"] <= hi + (hi - lo) * 0.3]
+    for z in near:
+        lo, hi = min(lo, z["bot"]), max(hi, z["top"])
+    pad = (hi - lo) * 0.05
+    ax.set_ylim(lo - pad, hi + pad)
+    ax.set_xlim(-1, right + 1)
     ax.set_facecolor("#131722")
     fig.patch.set_facecolor("#131722")
     ax.tick_params(colors="#b2b5be")
@@ -468,25 +534,31 @@ def make_chart(pair, df_entry, r, path):
 def msg_signal(pair, r):
     d = r["det"]
     z = d["zone"]
-    extra = ""
+    warn = ""
+    w = d.get("in_way")
+    if w:
+        warn += (f"⚠️ {AOI_NAME.get(w['tf'], 'Area')} in the way at {fmt(pair, w['level'])}: "
+                 f"only 1:{w['avail']:.1f} of room before it.\n")
     if r["missing"]:
-        extra += "Minor points not met: " + ", ".join(r["missing"]) + "\n"
-    if d.get("tp_fixed"):
-        extra += "Take profit is a fixed 1:2 (no structural target found).\n"
+        warn += "⚠️ Minor points not met: " + ", ".join(CHECK_LABELS.get(k, k) for k in r["missing"]) + "\n"
+    if d.get("tp_fixed") and not w:
+        warn += "⚠️ Take profit is a fixed 1:2 (no structural target found).\n"
+    if warn:
+        warn = "\n" + warn
     return (f"🚨 {pair} - {r['dir']} SIGNAL (entry on the {r['tf']} chart)\n"
-            f"All 4 main points met: trend, area of interest, break+retest, engulfing. ({r['score']}/8 in total)\n\n"
+            f"4 main points met: trend, area of interest, break+retest, engulfing. ({r['score']}/8 in total)\n\n"
             f"Entry: {fmt(pair, d['entry'])}\n"
             f"Stop loss: {fmt(pair, d['sl'])}\n"
-            f"Take profit: {fmt(pair, d['tp'])}  (RR 1:{d['rr']:.0f})\n"
-            f"Area ({z['tf']} chart): {fmt(pair, z['bot'])} - {fmt(pair, z['top'])} ({z['touches']} touches)\n"
-            f"{r['tf']} candle closed: {d['time']} UTC\n{extra}\n"
+            f"Take profit: {fmt(pair, d['tp'])}  (RR 1:{d['rr']:g})\n"
+            f"Area: {AOI_NAME.get(z['tf'], 'AOI')} {fmt(pair, z['bot'])} - {fmt(pair, z['top'])} ({z['touches']} touches)\n"
+            f"{r['tf']} candle closed: {d['time']} UTC\n{warn}\n"
             f"Check the chart yourself before entering.")
 
 
 def msg_watch(pair, r):
     lines = "\n".join(f"• {CHECK_LABELS[k]}\n   -> {WAIT_FOR[k]}" for k in r["missing"])
     z = r["det"].get("zone")
-    area = (f"Area of interest: {z['tf']} chart, {fmt(pair, z['bot'])} - {fmt(pair, z['top'])} "
+    area = (f"Area of interest: {AOI_NAME.get(z['tf'], 'AOI')}, {fmt(pair, z['bot'])} - {fmt(pair, z['top'])} "
             f"({z['touches']} touches)\n\n") if z else ""
     return (f"👀 {pair} - {r['dir']} WATCH on the {r['tf']} chart ({r['score']}/8)\n\n{area}"
             f"Still missing:\n{lines}\n\n"
