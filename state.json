@@ -60,7 +60,7 @@
   "missing_sig": "retest,engulf,rr"
  },
  "AUDJPY|SELL|H4": {
-  "missing_sig": "retest,engulf,rr"
+  "missing_sig": "engulf,rr"
  },
  "EURAUD|BUY|H4": {
   "missing_sig": "retest,engulf,rr"
