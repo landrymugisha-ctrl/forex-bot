@@ -26,9 +26,7 @@
   "full": "2026-10-14 12:00:00"
  },
  "CADJPY|BUY|H4": {},
- "GBPCHF|BUY|H4": {
-  "missing_sig": "retest,engulf,rr"
- },
+ "GBPCHF|BUY|H4": {},
  "NZDCAD|SELL|H4": {
   "full": "2026-10-20 08:00:00"
  },
@@ -84,5 +82,11 @@
  "GBPCHF|BUY|2H": {
   "full": "2026-10-21 14:00:00"
  },
- "AUDCAD|SELL|H4": {}
+ "AUDCAD|SELL|H4": {},
+ "EURAUD|SELL|1H": {
+  "full": "2026-10-22 11:00:00"
+ },
+ "GBPAUD|SELL|H4": {
+  "missing_sig": "timeframes,ema,rr"
+ }
 }
