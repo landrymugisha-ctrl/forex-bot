@@ -98,14 +98,12 @@
  "GBPCHF|BUY|30M": {
   "full": "2026-10-23 13:30:00"
  },
- "AUDCAD|BUY|H4": {
-  "missing_sig": "timeframes,ema,rr"
- },
+ "AUDCAD|BUY|H4": {},
  "GBPUSD|SELL|H4": {
   "missing_sig": "ema,engulf,rr"
  },
  "GBPJPY|SELL|H4": {
-  "missing_sig": "timeframes,engulf,rr"
+  "missing_sig": "timeframes,rr"
  },
  "GBPCHF|BUY|1H": {
   "full": "2026-10-23 17:00:00"
