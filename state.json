@@ -1,8 +1,6 @@
 {
  "EURUSD|SELL|H4": {},
- "AUDUSD|BUY|H4": {
-  "missing_sig": "timeframes,engulf,rr"
- },
+ "AUDUSD|BUY|H4": {},
  "GBPJPY|BUY|H4": {
   "missing_sig": "engulf,rr",
   "full": "2026-10-30 04:00:00"
@@ -10,7 +8,9 @@
  "EURGBP|SELL|H4": {
   "missing_sig": "engulf,rr"
  },
- "AUDCHF|BUY|H4": {},
+ "AUDCHF|BUY|H4": {
+  "missing_sig": "timeframes,ema,rr"
+ },
  "AUDNZD|BUY|H4": {
   "full": "2026-10-14 00:00:00"
  },
@@ -30,25 +30,29 @@
   "full": "2026-10-14 12:00:00"
  },
  "CADJPY|BUY|H4": {
-  "missing_sig": "retest,engulf,rr"
+  "missing_sig": "retest,engulf,rr",
+  "full": "2026-10-30 12:00:00"
  },
  "GBPCHF|BUY|H4": {
   "full": "2026-10-22 12:00:00"
  },
  "NZDCAD|SELL|H4": {
-  "full": "2026-10-20 08:00:00"
+  "full": "2026-10-20 08:00:00",
+  "missing_sig": "structure,retest,rr"
  },
  "EURJPY|SELL|H4": {
   "full": "2026-10-30 08:00:00"
  },
- "GBPCAD|SELL|H4": {},
+ "GBPCAD|SELL|H4": {
+  "full": "2026-10-30 12:00:00"
+ },
  "EURCHF|SELL|H4": {
   "full": "2026-10-29 12:00:00",
   "missing_sig": "engulf,rr"
  },
  "AUDJPY|BUY|H4": {
   "missing_sig": "ema,engulf,rr",
-  "full": "2026-10-29 16:00:00"
+  "full": "2026-10-30 12:00:00"
  },
  "CADJPY|SELL|30M": {
   "full": "2026-10-15 00:30:00"
@@ -107,7 +111,9 @@
  "EURAUD|SELL|1H": {
   "full": "2026-10-22 11:00:00"
  },
- "GBPAUD|SELL|H4": {},
+ "GBPAUD|SELL|H4": {
+  "missing_sig": "timeframes,ema,rr"
+ },
  "GBPCHF|BUY|30M": {
   "full": "2026-10-23 13:30:00"
  },
@@ -133,7 +139,7 @@
   "full": "2026-10-27 04:00:00"
  },
  "GBPCAD|SELL|2H": {
-  "full": "2026-10-30 12:00:00"
+  "full": "2026-10-30 16:00:00"
  },
  "EURGBP|SELL|1H": {
   "full": "2026-10-29 03:00:00"
@@ -144,7 +150,7 @@
   "full": "2026-10-30 12:00:00"
  },
  "USDJPY|SELL|1H": {
-  "full": "2026-10-30 07:00:00"
+  "full": "2026-10-30 18:00:00"
  },
  "EURNZD|BUY|H4": {},
  "GBPAUD|BUY|H4": {},
@@ -152,7 +158,7 @@
   "full": "2026-10-30 14:30:00"
  },
  "AUDJPY|BUY|30M": {
-  "full": "2026-10-30 14:30:00"
+  "full": "2026-10-30 19:00:00"
  },
  "CADJPY|BUY|30M": {
   "full": "2026-10-30 14:30:00"
