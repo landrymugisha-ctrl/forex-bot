@@ -61,7 +61,7 @@
   "full": "2026-11-03 04:00:00"
  },
  "GBPCHF|SELL|H4": {
-  "missing_sig": "retest,engulf,rr"
+  "missing_sig": "engulf,rr"
  },
  "GBPUSD|BUY|H4": {
   "full": "2026-11-04 20:00:00"
