@@ -86,8 +86,7 @@
   "full": "2026-10-28 04:00:00"
  },
  "EURJPY|BUY|H4": {
-  "full": "2026-10-19 16:00:00",
-  "missing_sig": "timeframes,structure,rr"
+  "full": "2026-10-19 16:00:00"
  },
  "AUDNZD|SELL|H4": {},
  "NZDCHF|BUY|H4": {},
@@ -145,7 +144,9 @@
  "USDCAD|BUY|H4": {
   "full": "2026-11-02 16:00:00"
  },
- "NZDUSD|SELL|H4": {},
+ "NZDUSD|SELL|H4": {
+  "missing_sig": "structure,engulf,rr"
+ },
  "USDCAD|BUY|2H": {
   "full": "2026-10-30 12:00:00"
  },
