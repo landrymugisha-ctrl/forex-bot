@@ -16,7 +16,9 @@
   "full": "2026-11-05 04:00:00"
  },
  "EURNZD|SELL|H4": {},
- "GBPNZD|BUY|H4": {},
+ "GBPNZD|BUY|H4": {
+  "missing_sig": "timeframes,engulf,rr"
+ },
  "AUDNZD|BUY|30M": {
   "full": "2026-10-14 07:00:00"
  },
@@ -27,20 +29,19 @@
   "full": "2026-10-14 12:00:00"
  },
  "CADJPY|BUY|H4": {
-  "full": "2026-11-12 20:00:00",
-  "missing_sig": "ema,engulf,rr"
+  "full": "2026-11-12 20:00:00"
  },
  "GBPCHF|BUY|H4": {
   "full": "2026-10-22 12:00:00",
-  "missing_sig": "timeframes,engulf,rr"
+  "missing_sig": "timeframes,rr"
  },
  "NZDCAD|SELL|H4": {
   "full": "2026-11-06 08:00:00",
-  "missing_sig": "ema,retest,rr"
+  "missing_sig": "retest,engulf,rr"
  },
  "EURJPY|SELL|H4": {
   "full": "2026-10-30 08:00:00",
-  "missing_sig": "timeframes,rr"
+  "missing_sig": "timeframes,engulf,rr"
  },
  "GBPCAD|SELL|H4": {
   "full": "2026-10-30 12:00:00"
@@ -76,9 +77,7 @@
   "full": "2026-10-16 20:00:00"
  },
  "AUDCHF|SELL|H4": {},
- "AUDUSD|SELL|H4": {
-  "missing_sig": "timeframes,retest,rr"
- },
+ "AUDUSD|SELL|H4": {},
  "AUDJPY|SELL|H4": {},
  "EURAUD|BUY|H4": {},
  "NZDCAD|BUY|H4": {},
@@ -94,7 +93,7 @@
   "full": "2026-10-19 16:00:00"
  },
  "AUDNZD|SELL|H4": {
-  "missing_sig": "timeframes,rr"
+  "missing_sig": "timeframes,engulf,rr"
  },
  "NZDCHF|BUY|H4": {
   "missing_sig": "timeframes,engulf,rr"
@@ -114,9 +113,7 @@
  "GBPCHF|BUY|2H": {
   "full": "2026-10-26 18:00:00"
  },
- "AUDCAD|SELL|H4": {
-  "missing_sig": "timeframes,structure,rr"
- },
+ "AUDCAD|SELL|H4": {},
  "EURAUD|SELL|1H": {
   "full": "2026-10-22 11:00:00"
  },
@@ -126,11 +123,10 @@
  },
  "AUDCAD|BUY|H4": {},
  "GBPUSD|SELL|H4": {
-  "full": "2026-10-26 04:00:00",
-  "missing_sig": "timeframes,retest,rr"
+  "full": "2026-10-26 04:00:00"
  },
  "GBPJPY|SELL|H4": {
-  "missing_sig": "timeframes,retest,rr"
+  "missing_sig": "timeframes,engulf,rr"
  },
  "GBPCHF|BUY|1H": {
   "full": "2026-10-23 17:00:00"
@@ -188,7 +184,9 @@
  },
  "GBPCAD|BUY|H4": {},
  "EURUSD|BUY|H4": {},
- "CADJPY|SELL|H4": {},
+ "CADJPY|SELL|H4": {
+  "missing_sig": "timeframes,structure,rr"
+ },
  "GBPCHF|SELL|2H": {
   "full": "2026-11-09 18:00:00"
  },
