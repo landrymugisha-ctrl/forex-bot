@@ -17,7 +17,7 @@
  },
  "EURNZD|SELL|H4": {},
  "GBPNZD|BUY|H4": {
-  "missing_sig": "engulf,rr"
+  "missing_sig": "timeframes,engulf,rr"
  },
  "AUDNZD|BUY|30M": {
   "full": "2026-10-14 07:00:00"
@@ -159,9 +159,7 @@
  "USDJPY|SELL|1H": {
   "full": "2026-10-30 18:00:00"
  },
- "EURNZD|BUY|H4": {
-  "missing_sig": "retest,engulf,rr"
- },
+ "EURNZD|BUY|H4": {},
  "GBPAUD|BUY|H4": {
   "full": "2026-11-02 16:00:00"
  },
