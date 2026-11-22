@@ -41,7 +41,7 @@
  },
  "GBPCAD|SELL|H4": {
   "full": "2026-10-30 12:00:00",
-  "missing_sig": "timeframes,engulf,rr"
+  "missing_sig": "engulf,rr"
  },
  "EURCHF|SELL|H4": {
   "full": "2026-10-29 12:00:00"
