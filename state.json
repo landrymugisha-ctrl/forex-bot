@@ -40,10 +40,11 @@
  },
  "GBPCAD|SELL|H4": {
   "full": "2026-10-30 12:00:00",
-  "missing_sig": "timeframes,engulf,rr"
+  "missing_sig": "timeframes,structure,rr"
  },
  "EURCHF|SELL|H4": {
-  "full": "2026-11-23 16:00:00"
+  "full": "2026-11-23 16:00:00",
+  "missing_sig": "engulf,rr"
  },
  "AUDJPY|BUY|H4": {
   "full": "2026-10-30 12:00:00"
@@ -61,7 +62,7 @@
   "full": "2026-11-03 04:00:00"
  },
  "GBPCHF|SELL|H4": {
-  "missing_sig": "engulf,rr",
+  "missing_sig": "timeframes,engulf,rr",
   "full": "2026-11-23 16:00:00"
  },
  "GBPUSD|BUY|H4": {
@@ -77,9 +78,7 @@
  },
  "AUDCHF|SELL|H4": {},
  "AUDUSD|SELL|H4": {},
- "AUDJPY|SELL|H4": {
-  "missing_sig": "retest,rr"
- },
+ "AUDJPY|SELL|H4": {},
  "EURAUD|BUY|H4": {},
  "NZDCAD|BUY|H4": {},
  "USDJPY|BUY|H4": {
@@ -128,9 +127,7 @@
  "EURCHF|SELL|1H": {
   "full": "2026-10-30 00:00:00"
  },
- "NZDCHF|SELL|H4": {
-  "missing_sig": "structure,retest,rr"
- },
+ "NZDCHF|SELL|H4": {},
  "EURAUD|SELL|2H": {
   "full": "2026-10-26 14:00:00"
  },
@@ -150,7 +147,7 @@
   "full": "2026-11-02 16:00:00"
  },
  "NZDUSD|SELL|H4": {
-  "missing_sig": "engulf,rr",
+  "missing_sig": "retest,engulf,rr",
   "full": "2026-11-23 08:00:00"
  },
  "USDCAD|BUY|2H": {
