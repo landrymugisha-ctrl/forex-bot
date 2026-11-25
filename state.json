@@ -1,7 +1,5 @@
 {
- "EURUSD|SELL|H4": {
-  "missing_sig": "timeframes,engulf,rr"
- },
+ "EURUSD|SELL|H4": {},
  "AUDUSD|BUY|H4": {},
  "GBPJPY|BUY|H4": {
   "full": "2026-11-04 04:00:00"
@@ -85,8 +83,7 @@
  "EURAUD|BUY|H4": {},
  "NZDCAD|BUY|H4": {},
  "USDJPY|BUY|H4": {
-  "full": "2026-11-10 04:00:00",
-  "missing_sig": "timeframes,retest,rr"
+  "full": "2026-11-10 04:00:00"
  },
  "GBPNZD|SELL|H4": {},
  "NZDCAD|SELL|2H": {
